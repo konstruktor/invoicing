@@ -1,0 +1,1 @@
+[![CircleCI](https://circleci.com/gh/konstruktor/invoicing-api.svg?style=svg)](https://circleci.com/gh/konstruktor/invoicing-api)
