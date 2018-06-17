@@ -1,4 +1,5 @@
-from marshmallow import Schema, fields
+from decimal import Decimal
+from marshmallow import Schema, fields, pre_load
 
 
 class ContactSchema(Schema):
@@ -12,10 +13,12 @@ class LineItemSchema(Schema):
     description = fields.Str(required=True)
     quantity = fields.Number(required=True)
     unit_price = fields.Number(required=True)
-    total = fields.Method('calculate_total', dump_only=True)
+    total = fields.Number(required=True)
 
-    def calculate_total(self, line_items):
-        return 0
+    @pre_load
+    def calculate_total(self, data):
+        data['total'] = data['quantity'] * data['unit_price']
+        return data
 
 
 class InvoiceSchema(Schema):
@@ -28,11 +31,13 @@ class InvoiceSchema(Schema):
     tax_percentage = fields.Number()
     line_items = fields.Nested(LineItemSchema, many=True, required=True)
     notes = fields.Str()
-    subtotal = fields.Method('calculate_subtotal', dump_only=True)
-    total = fields.Method('calculate_total', dump_only=True)
+    subtotal = fields.Number()
+    total = fields.Number()
 
-    def calculate_subtotal(self, line_items):
-        return 0
-
-    def calculate_total(self, line_items):
-        return 0
+    @pre_load
+    def calculate_total(self, data):
+        data['subtotal'] = Decimal(0)
+        for line_item in data['line_items']:
+            data['subtotal'] += line_item['quantity'] * line_item['unit_price']
+        data['total'] = data['subtotal']
+        return data
